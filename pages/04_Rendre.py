@@ -1,7 +1,7 @@
 import streamlit as st
 from database import get_livres, rendre_livre
 
-st.set_page_config(page_title="Rendre un livre")
+st.set_page_config(page_title="Rendre un livre",    page_icon="assets/logo_icone.png",)
 
 st.title("Rendre un livre")
 st.write("Sélectionne un livre actuellement emprunté pour le marquer comme rendu.")

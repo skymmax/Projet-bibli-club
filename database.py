@@ -144,3 +144,49 @@ def get_historique():
     rows = cur.fetchall()
     conn.close()
     return rows
+
+# --- Récupérer un livre par id ---
+def get_livre(id_livre: int):
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM livres WHERE id = ?", (id_livre,))
+    row = cur.fetchone()
+    conn.close()
+    return row
+
+
+# --- Mettre à jour un livre ---
+def mettre_a_jour_livre(id_livre, titre, auteur, categorie, proprietaire, resume, couverture, disponibilite, emprunte_par):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        UPDATE livres
+        SET titre = ?,
+            auteur = ?,
+            categorie = ?,
+            proprietaire = ?,
+            resume = ?,
+            couverture = ?,
+            disponibilite = ?,
+            emprunte_par = ?
+        WHERE id = ?
+    """, (titre, auteur, categorie, proprietaire, resume, couverture,
+          disponibilite, emprunte_par, id_livre))
+
+    conn.commit()
+    conn.close()
+
+
+# --- Supprimer un livre (et son historique associé) ---
+def supprimer_livre(id_livre: int):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    # On supprime d'abord l'historique lié à ce livre
+    cur.execute("DELETE FROM historique WHERE id_livre = ?", (id_livre,))
+    # Puis le livre lui-même
+    cur.execute("DELETE FROM livres WHERE id = ?", (id_livre,))
+
+    conn.commit()
+    conn.close()

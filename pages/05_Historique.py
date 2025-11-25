@@ -1,7 +1,8 @@
 import streamlit as st
 from database import get_historique
 
-st.set_page_config(page_title="Historique des emprunts")
+st.set_page_config(page_title="Historique des emprunts", page_icon="assets/logo_icone.png",
+)
 
 st.title("Historique des emprunts")
 st.write("Voici l'historique complet des emprunts/rendus de la bibliothèque du club.")

@@ -1,7 +1,8 @@
 import streamlit as st
 from database import ajouter_livre
 
-st.set_page_config(page_title="Ajouter un livre",)
+st.set_page_config(page_title="Ajouter un livre",    page_icon="assets/logo_icone.png",
+)
 
 st.title("Ajouter un livre")
 st.write("Remplis les informations ci-dessous pour ajouter un livre à la bibliothèque du club.")

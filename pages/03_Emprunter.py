@@ -1,7 +1,8 @@
 import streamlit as st
 from database import get_livres, emprunter_livre
 
-st.set_page_config(page_title="Emprunter un livre")
+st.set_page_config(page_title="Emprunter un livre",    page_icon="assets/logo_icone.png",
+)
 
 st.title("Emprunter un livre")
 st.write("Sélectionne un livre disponible ci-dessous pour l’emprunter.")

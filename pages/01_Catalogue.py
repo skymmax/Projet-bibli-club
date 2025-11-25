@@ -1,7 +1,8 @@
 import streamlit as st
 from database import get_livres
 
-st.set_page_config(page_title="Catalogue de la bibliothèque")
+st.set_page_config(page_title="Catalogue de la bibliothèque", page_icon="assets/logo_icone.png",
+)
 
 st.title("Catalogue de la bibliothèque du Club")
 st.write("Retrouve ici tous les livres partagés par les membres du club.")
