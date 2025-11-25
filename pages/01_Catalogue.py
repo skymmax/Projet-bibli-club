@@ -16,6 +16,9 @@ if not livres_rows:
 else:
     # Conversion des lignes SQLite en dictionnaires
     livres = [dict(row) for row in livres_rows]
+    # On enlève les livres archivés du catalogue public
+    livres = [l for l in livres if l.get("disponibilite") != "Archivé"]
+
 
     # --- Barre latérale de filtres ---
     st.sidebar.header("Filtres")

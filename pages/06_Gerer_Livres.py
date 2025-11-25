@@ -1,5 +1,6 @@
 import streamlit as st
-from database import get_livres, get_livre, mettre_a_jour_livre, supprimer_livre
+from database import get_livres, get_livre, mettre_a_jour_livre, archiver_livre
+
 
 st.set_page_config(page_title="Gérer les livres",  page_icon="assets/logo_icone.png",
 )
@@ -65,14 +66,14 @@ else:
                 st.success("Les informations du livre ont été mises à jour.")
 
         st.markdown("---")
-        st.subheader("Suppression du livre")
+        st.subheader("Archivage du livre")
 
-        st.warning(
-            "La suppression est définitive. Le livre sera retiré de la bibliothèque "
-            "ainsi que son historique d'emprunts."
+        st.info(
+            "Archiver un livre le retire du catalogue et de la liste d'emprunt, "
+            "mais les données restent dans la base et l'historique des emprunts est conservé."
         )
 
-        if st.button("Supprimer ce livre"):
-            supprimer_livre(id_livre)
-            st.success("Le livre a été supprimé.")
-            st.stop()  # pour éviter de continuer à afficher l'ancien livre
+        if st.button("Archiver ce livre"):
+            archiver_livre(id_livre)
+            st.success("Le livre a été archivé.")
+            st.stop()

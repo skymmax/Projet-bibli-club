@@ -190,3 +190,21 @@ def supprimer_livre(id_livre: int):
 
     conn.commit()
     conn.close()
+
+def archiver_livre(id_livre: int):
+    """Marque un livre comme archivé (il n'apparaîtra plus dans l'app)."""
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        UPDATE livres
+        SET disponibilite = 'Archivé',
+            emprunte_par = NULL
+        WHERE id = ?
+        """,
+        (id_livre,),
+    )
+
+    conn.commit()
+    conn.close()
