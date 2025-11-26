@@ -65,4 +65,4 @@ else:
             "Commentaire": h.get("commentaire") or ""
         })
 
-    st.dataframe(tableau_affiche, width="stretch")
+    st.dataframe(tableau_affiche, use_container_width=True)

@@ -88,4 +88,4 @@ else:
             row = {en_tetes[col]: l.get(col) for col in colonnes_affichees}
             data_affichee.append(row)
 
-        st.dataframe(data_affichee, width="stretch")
+        st.dataframe(data_affichee, use_container_width=True)
