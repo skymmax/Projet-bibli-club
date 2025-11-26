@@ -105,18 +105,6 @@ def ajouter_livre(titre, auteur, categorie, proprietaire, proprietaire_email, re
 
     conn.commit()
     conn.close()
-    conn = get_connection()
-    cur = conn.cursor()
-
-    date_ajout = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    cur.execute("""
-        INSERT INTO livres (titre, auteur, categorie, proprietaire, resume, couverture, date_ajout)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-    """, (titre, auteur, categorie, proprietaire, resume, couverture, date_ajout))
-
-    conn.commit()
-    conn.close()
 
 
 # --- Get all books ---
