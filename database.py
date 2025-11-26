@@ -136,11 +136,8 @@ def emprunter_livre(id_livre, emprunteur, emprunteur_email, commentaire=""):
     conn = get_connection()
     cur = conn.cursor()
 
-    # Date actuelle
     date_emprunt = datetime.now()
     date_emprunt_str = date_emprunt.strftime("%Y-%m-%d %H:%M:%S")
-
-    # Date de retour prévue : + 30 jours
     date_retour_prevue = (date_emprunt + timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
 
     # Mise à jour du livre
@@ -150,21 +147,18 @@ def emprunter_livre(id_livre, emprunteur, emprunteur_email, commentaire=""):
         WHERE id = ?
     """, (emprunteur, id_livre))
 
-    # Ajout dans l'historique — NOTE : on met aussi emprunteur_email + date_retour_prevue
+    # Ajout dans l'historique
     cur.execute("""
-        INSERT INTO historique (
-            id_livre,
-            emprunteur,
-            emprunteur_email,
-            date_emprunt,
-            date_retour_prevue,
-            commentaire
-        )
+        INSERT INTO historique (id_livre, emprunteur, emprunteur_email, date_emprunt, date_retour_prevue, commentaire)
         VALUES (?, ?, ?, ?, ?, ?)
     """, (id_livre, emprunteur, emprunteur_email, date_emprunt_str, date_retour_prevue, commentaire))
 
     conn.commit()
-    conn.close()    
+    conn.close()
+
+    # On renvoie les dates pour les emails
+    return date_emprunt_str, date_retour_prevue
+     
 # --- Rendre un livre ---
 def rendre_livre(id_livre, commentaire=""):
     conn = get_connection()
