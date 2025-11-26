@@ -7,29 +7,27 @@ st.set_page_config(page_title="Emprunter un livre",    page_icon="assets/logo_ic
 st.title("Emprunter un livre")
 st.write("Sélectionne un livre disponible ci-dessous pour l’emprunter.")
 
-# --- Récupération des livres ---
 livres_rows = get_livres()
 livres = [dict(row) for row in livres_rows]
 
-# Filtrer les livres disponibles
 livres_dispos = [l for l in livres if l["disponibilite"] == "Disponible"]
 
 if not livres_dispos:
     st.info("Aucun livre disponible pour le moment.")
 else:
-    # Liste déroulante : uniquement livres dispo
     livre_selection = st.selectbox(
         "Choisir un livre",
         options=[f"{l['id']} - {l['titre']} (par {l['auteur']})" for l in livres_dispos]
     )
 
     emprunteur = st.text_input("Ton nom")
+    emprunteur_email = st.text_input("Ton email DeVinci")
     commentaire = st.text_area("Commentaire (optionnel)")
 
     if st.button("Emprunter ce livre"):
-        if not emprunteur:
-            st.error("Merci d’indiquer ton nom.")
+        if not emprunteur or not emprunteur_email:
+            st.error("Merci d’indiquer ton nom et ton email.")
         else:
             id_livre = int(livre_selection.split(" - ")[0])
-            emprunter_livre(id_livre, emprunteur, commentaire)
-            st.success("Le livre a bien été emprunté !")
+            emprunter_livre(id_livre, emprunteur, emprunteur_email, commentaire)
+            st.success("Le livre a bien été emprunté. Tu as un mois pour le rendre.")

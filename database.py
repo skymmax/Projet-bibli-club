@@ -1,6 +1,7 @@
 import sqlite3
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta  
+
 
 DB_PATH = Path("data") / "bibliotheque.db"
 
@@ -16,6 +17,43 @@ def get_connection():
 
 # --- Initialize DB ---
 def init_db():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    # Table des livres
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS livres (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titre TEXT NOT NULL,
+            auteur TEXT,
+            categorie TEXT,
+            proprietaire TEXT,
+            proprietaire_email TEXT,
+            disponibilite TEXT DEFAULT 'Disponible',
+            emprunte_par TEXT,
+            resume TEXT,
+            couverture TEXT,
+            date_ajout TEXT
+        );
+    """)
+
+    # Table historique des emprunts
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS historique (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id_livre INTEGER NOT NULL,
+            emprunteur TEXT NOT NULL,
+            emprunteur_email TEXT,
+            date_emprunt TEXT NOT NULL,
+            date_retour_prevue TEXT NOT NULL,
+            date_retour TEXT,
+            commentaire TEXT,
+            FOREIGN KEY (id_livre) REFERENCES livres(id)
+        );
+    """)
+
+    conn.commit()
+    conn.close()
     conn = get_connection()
     cur = conn.cursor()
 
@@ -53,7 +91,20 @@ def init_db():
 
 
 # --- Add a book ---
-def ajouter_livre(titre, auteur, categorie, proprietaire, resume, couverture):
+
+def ajouter_livre(titre, auteur, categorie, proprietaire, proprietaire_email, resume, couverture):
+    conn = get_connection()
+    cur = conn.cursor()
+
+    date_ajout = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    cur.execute("""
+        INSERT INTO livres (titre, auteur, categorie, proprietaire, proprietaire_email, resume, couverture, date_ajout)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (titre, auteur, categorie, proprietaire, proprietaire_email, resume, couverture, date_ajout))
+
+    conn.commit()
+    conn.close()
     conn = get_connection()
     cur = conn.cursor()
 
@@ -81,29 +132,39 @@ def get_livres():
 
 
 # --- Emprunter un livre ---
-def emprunter_livre(id_livre, emprunteur, commentaire=""):
+def emprunter_livre(id_livre, emprunteur, emprunteur_email, commentaire=""):
     conn = get_connection()
     cur = conn.cursor()
 
-    date_emprunt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # Date actuelle
+    date_emprunt = datetime.now()
+    date_emprunt_str = date_emprunt.strftime("%Y-%m-%d %H:%M:%S")
 
-    # Update statut du livre
+    # Date de retour prévue : + 30 jours
+    date_retour_prevue = (date_emprunt + timedelta(days=30)).strftime("%Y-%m-%d %H:%M:%S")
+
+    # Mise à jour du livre
     cur.execute("""
         UPDATE livres
         SET disponibilite = 'Indisponible', emprunte_par = ?
         WHERE id = ?
     """, (emprunteur, id_livre))
 
-    # Ajouter à l’historique
+    # Ajout dans l'historique — NOTE : on met aussi emprunteur_email + date_retour_prevue
     cur.execute("""
-        INSERT INTO historique (id_livre, emprunteur, date_emprunt, commentaire)
-        VALUES (?, ?, ?, ?)
-    """, (id_livre, emprunteur, date_emprunt, commentaire))
+        INSERT INTO historique (
+            id_livre,
+            emprunteur,
+            emprunteur_email,
+            date_emprunt,
+            date_retour_prevue,
+            commentaire
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (id_livre, emprunteur, emprunteur_email, date_emprunt_str, date_retour_prevue, commentaire))
 
     conn.commit()
-    conn.close()
-
-
+    conn.close()    
 # --- Rendre un livre ---
 def rendre_livre(id_livre, commentaire=""):
     conn = get_connection()
@@ -131,6 +192,19 @@ def rendre_livre(id_livre, commentaire=""):
 
 # --- Historique complet ---
 def get_historique():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT h.*, l.titre, l.proprietaire, l.proprietaire_email
+        FROM historique h
+        JOIN livres l ON l.id = h.id_livre
+        ORDER BY date_emprunt DESC
+    """)
+
+    rows = cur.fetchall()
+    conn.close()
+    return rows
     conn = get_connection()
     cur = conn.cursor()
 
