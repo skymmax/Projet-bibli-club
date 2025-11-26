@@ -1,5 +1,5 @@
 import streamlit as st
-from database import init_db
+from database import init_db, get_livres, get_historique
 from pathlib import Path
 
 # Charger et afficher le logo
@@ -48,3 +48,39 @@ développement personnel et domaines associés.
 N’hésitez pas à contribuer en ajoutant vos livres ou en partageant vos retours.
 """)
 st.markdown("Bonne lecture à tous ! ")
+
+# --- Statistiques de la bibliothèque ---
+
+livres_rows = get_livres()
+livres = [dict(row) for row in livres_rows]
+
+total_livres = len(livres)
+nb_disponibles = sum(1 for l in livres if l.get("disponibilite") == "Disponible")
+nb_empruntes = sum(1 for l in livres if l.get("disponibilite") == "Indisponible")
+nb_archives = sum(1 for l in livres if l.get("disponibilite") == "Archivé")
+
+historique_rows = get_historique()
+historique = [dict(r) for r in historique_rows]
+total_emprunts = len(historique)
+
+# Nombre de livres différents ayant déjà été empruntés
+livres_empruntes_distincts = len({h.get("id_livre") for h in historique}) if historique else 0
+
+st.subheader("Statistiques de la bibliothèque")
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.metric("Livres au total", total_livres)
+    st.metric("Livres déjà empruntés (au moins une fois)", livres_empruntes_distincts)
+
+with col2:
+    st.metric("Disponibles", nb_disponibles)
+    st.metric("Actuellement empruntés", nb_empruntes)
+
+with col3:
+    st.metric("Livres archivés", nb_archives)
+    st.metric("Emprunts enregistrés", total_emprunts)
+
+st.markdown("---")
+st.markdown("© 2025 Club Entrepreneurs - Tous droits réservés.")
