@@ -89,3 +89,5 @@ else:
             data_affichee.append(row)
 
         st.dataframe(data_affichee, use_container_width=True)
+
+# -- IGNORE ---
