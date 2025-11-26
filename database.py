@@ -276,3 +276,33 @@ def archiver_livre(id_livre: int):
 
     conn.commit()
     conn.close()
+
+def get_dernier_emprunt(id_livre: int):
+    """
+    Retourne le dernier emprunt d'un livre (ou None s'il n'y en a pas).
+
+    Les infos retournées incluent :
+    - id, id_livre, emprunteur, emprunteur_email
+    - date_emprunt, date_retour_prevue, date_retour, commentaire
+    - titre, proprietaire, proprietaire_email (via la jointure avec livres)
+    """
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT h.*, l.titre, l.proprietaire, l.proprietaire_email
+        FROM historique h
+        JOIN livres l ON l.id = h.id_livre
+        WHERE h.id_livre = ?
+        ORDER BY h.date_emprunt DESC
+        LIMIT 1
+    """, (id_livre,))
+
+    row = cur.fetchone()
+    conn.close()
+
+    if row is None:
+        return None
+
+    # On renvoie un dict pour que ce soit plus simple à utiliser dans Streamlit
+    return dict(row)
