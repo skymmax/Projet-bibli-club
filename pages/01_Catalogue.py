@@ -1,8 +1,11 @@
 import streamlit as st
-from database import get_livres
-# -----------------------------
-# Configuration de la page  
-# -----------------------------
+import pandas as pd
+
+from database import get_livres, emprunter_livre
+from notifications import (
+    envoyer_mail_emprunt_proprietaire,
+    envoyer_mail_emprunt_emprunteur,
+)
 
 st.set_page_config(page_title="Catalogue", layout="wide", page_icon="assets/logo_icone.png")
 
@@ -13,7 +16,7 @@ st.write(
     "Utilise les filtres ci-dessous pour trouver rapidement ce que tu cherches."
 )
 
-# ----------------------------
+# -----------------------------
 # Récupération des données
 # -----------------------------
 rows = get_livres()
@@ -89,7 +92,7 @@ if not livres_filtres:
     st.stop()
 
 # -----------------------------
-# Petite fonction utilitaire : badge de disponibilité
+# Fonction utilitaire : badge de disponibilité
 # -----------------------------
 def badge_disponibilite(dispo: str) -> str:
     dispo = dispo or "Disponible"
@@ -123,7 +126,6 @@ for start in range(0, len(livres_filtres), NB_COLS):
             proprietaire = livre.get("proprietaire") or "Inconnu"
             dispo = livre.get("disponibilite") or "Disponible"
 
-            # Carte en HTML simple
             st.markdown(
                 f"""
                 <div style="
@@ -205,3 +207,90 @@ else:
                 st.image(couverture, use_column_width=True)
             else:
                 st.info("Aucune couverture fournie pour ce livre.")
+
+        # ---------- Formulaire d'emprunt directement depuis la fiche ----------
+        st.markdown("---")
+        st.markdown("### Emprunter ce livre")
+
+        if dispo != "Disponible":
+            st.info("Ce livre n'est actuellement pas disponible à l’emprunt.")
+        else:
+            with st.form(f"form_emprunt_{selected_id}"):
+                emprunteur = st.text_input("Ton nom")
+                emprunteur_email = st.text_input("Ton email (ex : prenom.nom@edu.devinci.fr)")
+                commentaire = st.text_area("Commentaire (optionnel)", height=80)
+
+                submit_emprunt = st.form_submit_button("Emprunter ce livre")
+
+            if submit_emprunt:
+                if not emprunteur or not emprunteur_email:
+                    st.error("Merci de renseigner ton nom et ton email pour emprunter le livre.")
+                else:
+                    # Mise à jour de la base
+                    date_emprunt, date_retour_prevue = emprunter_livre(
+                        selected_id,
+                        emprunteur,
+                        emprunteur_email,
+                        commentaire,
+                    )
+
+                    st.success("Le livre a bien été emprunté. Tu as un mois pour le rendre.")
+
+                    # Envoi des emails
+                    try:
+                        envoyer_mail_emprunt_proprietaire(
+                            proprietaire=proprietaire,
+                            proprietaire_email=(proprietaire_email if proprietaire_email != "Non renseigné" else ""),
+                            emprunteur=emprunteur,
+                            emprunteur_email=emprunteur_email,
+                            titre=titre,
+                            date_emprunt=date_emprunt,
+                            date_retour_prevue=date_retour_prevue,
+                        )
+                    except Exception as e:
+                        st.warning(f"L'emprunt est enregistré, mais l'email au propriétaire n'a pas pu être envoyé : {e}")
+
+                    try:
+                        envoyer_mail_emprunt_emprunteur(
+                            proprietaire=proprietaire,
+                            proprietaire_email=(proprietaire_email if proprietaire_email != "Non renseigné" else ""),
+                            emprunteur=emprunteur,
+                            emprunteur_email=emprunteur_email,
+                            titre=titre,
+                            date_emprunt=date_emprunt,
+                            date_retour_prevue=date_retour_prevue,
+                        )
+                    except Exception as e:
+                        st.warning(f"L'emprunt est enregistré, mais l'email de confirmation n'a pas pu être envoyé : {e}")
+
+                    # Rechargement de la page pour mettre à jour la dispo
+                    st.rerun()
+
+# -----------------------------
+# Vue tableau "backup" du catalogue
+# -----------------------------
+st.markdown("---")
+st.subheader("Vue tableau du catalogue (backup)")
+
+try:
+    df_backup = pd.DataFrame(livres_filtres)[
+        ["titre", "auteur", "categorie", "proprietaire", "disponibilite", "emprunte_par"]
+    ].rename(
+        columns={
+            "titre": "Titre",
+            "auteur": "Auteur",
+            "categorie": "Catégorie",
+            "proprietaire": "Propriétaire",
+            "disponibilite": "Disponibilité",
+            "emprunte_par": "Emprunté par",
+        }
+    )
+except KeyError:
+    # Si jamais certaines colonnes n'existent pas (sécurité)
+    df_backup = pd.DataFrame(livres_filtres)
+
+st.dataframe(df_backup, use_container_width=True)
+st.markdown(
+    "_Remarque : cette vue tableau est principalement destinée à des fins de sauvegarde et de vérification. "
+    "Pour une expérience utilisateur optimale, utilise les cartes de la section principale du catalogue._"
+)
