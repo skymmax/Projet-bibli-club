@@ -13,7 +13,7 @@ st.write(
     "Utilise les filtres ci-dessous pour trouver rapidement ce que tu cherches."
 )
 
-# -----------------------------
+# ----------------------------
 # Récupération des données
 # -----------------------------
 rows = get_livres()
