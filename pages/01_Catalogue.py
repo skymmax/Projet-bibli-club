@@ -6,7 +6,7 @@ from database import get_livres
 
 st.set_page_config(page_title="Catalogue", layout="wide", page_icon="assets/logo_icone.png")
 
-st.title("📚 Catalogue des livres")
+st.title("Catalogue des livres")
 
 st.write(
     "Retrouve ici tous les livres disponibles dans la bibliothèque du Club Entrepreneurs. "
